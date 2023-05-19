@@ -565,7 +565,7 @@ class CVaR_Modified_SGD(Algorithm):
 
     def step(self, imgs, labels):
 
-        beta = self.hparams['cvar_sgd_beta'] # is beta = rho as defined in pseudocode?
+        beta = self.hparams['cvar_sgd_beta'] 
         M = self.hparams['cvar_sgd_M']
         ts = torch.ones(size=(imgs.size(0),)).to(self.device) # batched array of alpha_j's 
 
@@ -589,11 +589,9 @@ class CVaR_Modified_SGD(Algorithm):
             grad_ts = (1 - (1 / beta) * indicator_avg) / float(imgs.size(0))
             ts = ts - self.hparams['cvar_sgd_t_step_size'] * grad_ts
 
-        # More fine-grained approach: compare standard loss and cvar loss for each sample in batch
+        # compare standard loss and cvar loss for each sample in batch
         standard_loss = F.cross_entropy(self.predict(imgs), labels, reduction='none')
         loss_vec = torch.where(cvar_loss > standard_loss, cvar_loss, standard_loss)
-        # TODO couting the number of times cvar_loss > standard_loss and find the dependence with rho value
-        # TODO replace loss_vec with cvar_loss  and compare with CVaR_SGD
         loss_reduced = loss_vec.mean()
         loss_reduced.backward()
         self.optimizer.step()
@@ -626,7 +624,7 @@ class CVaR_Modified_SGD_Autograd(Algorithm):
 
     def step(self, imgs, labels):
 
-        beta = self.hparams['cvar_sgd_beta'] # is beta = rho as defined in pseudocode?
+        beta = self.hparams['cvar_sgd_beta'] 
         M = self.hparams['cvar_sgd_M']
         ts = torch.ones(size=(imgs.size(0),)).to(self.device) # batched array of alpha_j's 
 
@@ -662,7 +660,7 @@ class CVaR_Modified_SGD_Autograd(Algorithm):
             cvar_loss_reduced = cvar_loss.mean()
 
 
-        # More fine-grained approach: compare standard loss and cvar loss for each sample in batch
+        # compare standard loss and cvar loss for each sample in batch
         standard_loss = F.cross_entropy(self.predict(imgs), labels, reduction='none')
         loss_vec = torch.where(cvar_loss > standard_loss, cvar_loss, standard_loss)
         loss_reduced = loss_vec.mean()
