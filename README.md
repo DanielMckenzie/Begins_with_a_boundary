@@ -1,4 +1,4 @@
-# It begins with a boundary: a geometric view on probabilistically robust learning.
+# It begins with a boundary: A geometric view on probabilistically robust learning.
 This code accompanies the paper mentioned in the title. This code builds lightly upon the (excellent) ```advbench``` repo of Robey et al. For ease of reproducibility and maximum transparency, we have included their entire repository, including the readme (see below). Our contribution is the ```CVaR_Modified_SGD``` and ```CVaR_Modified_SGD_Autograd``` classes found in ```algorithms.py```.
 
 To reproduce the results of Table 1 in our paper, run ```run_reps.sh``` (Warning: this scripts run for ~ 100 hours). Alternatively, see the "Quick Start" section below.
