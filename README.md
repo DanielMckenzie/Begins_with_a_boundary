@@ -1,5 +1,5 @@
 # It begins with a boundary: A geometric view on probabilistically robust learning.
-This code accompanies the paper *It begins with a boundary: A geometric view on probabilistically robust learning*:
+This code accompanies the paper "It begins with a boundary: A geometric view on probabilistically robust learning" which is available on arxiv: https://arxiv.org/abs/2305.18779
 ```
 @misc{bungert2023begins,
       title={It begins with a boundary: A geometric view on probabilistically robust learning}, 
