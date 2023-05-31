@@ -1,7 +1,19 @@
 # It begins with a boundary: A geometric view on probabilistically robust learning.
-This code accompanies the paper mentioned in the title. This code builds lightly upon the (excellent) ```advbench``` repo of Robey et al. For ease of reproducibility and maximum transparency, we have included their entire repository, including the readme (see below). Our contribution is the ```CVaR_Modified_SGD``` and ```CVaR_Modified_SGD_Autograd``` classes found in ```algorithms.py```.
+This code accompanies the paper *It begins with a boundary: A geometric view on probabilistically robust learning*:
+```
+@misc{bungert2023begins,
+      title={It begins with a boundary: A geometric view on probabilistically robust learning}, 
+      author={Leon Bungert and Nicol\'as {Garc\'ia Trillos} and Matt Jacobs and Daniel McKenzie and \DJ or\dj e Nikoli\'c and Qingsong Wang},
+      year={2023},
+      eprint={2305.18779},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+```
 
-To reproduce the results of Table 1 in our paper, run ```run_reps.sh``` (Warning: this scripts run for ~ 100 hours). Alternatively, see the "Quick Start" section below.
+Our implementation builds lightly upon the (excellent) ```advbench``` repo of Robey et al. For ease of reproducibility and maximum transparency, we have included their entire repository, including the readme (see below). Our contribution is the ```CVaR_Modified_SGD``` and ```CVaR_Modified_SGD_Autograd``` classes found in ```algorithms.py```. 
+
+To reproduce the results of Table 1 in our paper, run ```run_reps.sh``` (Warning: this script runs for ~ 100 hours). Alternatively, see the "Quick Start" section below.
 
 --------
 
