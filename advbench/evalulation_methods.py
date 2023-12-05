@@ -238,3 +238,72 @@ class Augmented(Evaluator):
 
         return return_dict
 
+
+
+class Per_Datum(Evaluator):
+    """Calculates per datum clean and augmented accuracy of a classifier."""
+
+    NAME = 'Per_Datum'
+
+    def __init__(self, algorithm, device, test_hparams):
+        super(Per_Datum, self).__init__(algorithm, device, test_hparams)
+        self.n_aug_samples = self.test_hparams['aug_n_samples']
+
+
+    @torch.no_grad()
+    def calculate(self, loader):
+        self.algorithm.eval()
+
+        correct, total, loss_sum = 0, 0, 0
+        correct_per_datum = []
+        total_clean_accuracy_per_datum = torch.zeros(0).to(self.device)
+
+
+        for imgs, labels in loader:
+            imgs, labels = imgs.to(self.device), labels.to(self.device)
+
+            batch_correct_ls = []
+            for _ in range(self.n_aug_samples):
+                perturbations = self.sample_perturbations(imgs)
+                perturbed_imgs = self.clamp_imgs(imgs + perturbations)
+                logits = self.algorithm.predict(perturbed_imgs)
+                loss_sum += F.cross_entropy(logits, labels, reduction='sum').item()
+                preds = logits.argmax(dim=1, keepdim=True)
+
+                # unreduced predictions
+                pert_preds = preds.eq(labels.view_as(preds))
+
+                # list of predictions for each data point
+                batch_correct_ls.append(pert_preds)
+
+                correct += pert_preds.sum().item()
+                total += imgs.size(0)
+
+            # number of correct predictions for each data point
+            batch_correct = torch.sum(torch.hstack(batch_correct_ls), dim=1)
+            # print('batch_correct: ', batch_correct)
+            correct_per_datum.append(batch_correct)
+
+
+            # Calculate accuracy for clean data
+            logits = self.algorithm.predict(imgs)
+            preds = logits.argmax(dim=1, keepdim=True)
+            clean_preds = preds.eq(labels.view_as(preds))
+            # print('clean_preds: ', clean_preds)
+            total_clean_accuracy_per_datum = torch.cat((total_clean_accuracy_per_datum, clean_preds))
+
+
+
+        # accuracy for each data point
+        accuracy_per_datum = 100. * torch.hstack(correct_per_datum) / self.n_aug_samples
+        clean_accuracy_per_datum = total_clean_accuracy_per_datum
+
+
+        # Flatten the clean_accuracy_per_datum tensor
+        clean_accuracy_per_datum = clean_accuracy_per_datum.squeeze()
+
+        # Create final results tensor
+        results = torch.stack([accuracy_per_datum, clean_accuracy_per_datum], dim=1)
+
+        self.algorithm.train()
+        return results
