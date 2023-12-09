@@ -62,7 +62,7 @@ def main(args, hparams, test_hparams):
         )
 
     def load_checkpoint(epoch):
-        ckpt = torch.load(os.path.join(ckpt_path, f'model_ckpt_{epoch}.pkl'), map_location=torch.device('mps'))
+        ckpt = torch.load(os.path.join(ckpt_path, f'model_ckpt_{epoch}.pkl'), map_location=torch.device('cuda:0'))
         algorithm.load_state_dict(ckpt['state_dict'])
 
 
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('--cvar_sgd_t_step_size', type=float, default=None, help='CVaR-SGD t step size')
     args = parser.parse_args()
 
-    os.makedirs(os.path.join(args.output_dir), exist_ok=True)
+    #os.makedirs(os.path.join(args.output_dir), exist_ok=True)
 
     print('Args:')
     for k, v in sorted(vars(args).items()):
