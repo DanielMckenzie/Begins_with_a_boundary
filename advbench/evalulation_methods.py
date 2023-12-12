@@ -257,21 +257,30 @@ class Per_Datum(Evaluator):
         correct, total, loss_sum = 0, 0, 0
         correct_per_datum = []
         total_clean_accuracy_per_datum = torch.zeros(0).to(self.device)
+        path_images = []
+        perturbation_preds_split = []
+        perturbed_imgs_split = []
+        # path_images_perturbations = []
 
 
         for imgs, labels in loader:
             imgs, labels = imgs.to(self.device), labels.to(self.device)
-
             batch_correct_ls = []
-            for _ in range(self.n_aug_samples):
+            batch_size = imgs.shape[0] # hardcoding this for now
+            perturbation_preds_batch = torch.zeros((batch_size, self.n_aug_samples), device='cuda:0')
+            perturbed_imgs_batch = torch.zeros((batch_size, self.n_aug_samples,3, 32, 32), device='cuda:0')
+
+            for i in range(self.n_aug_samples):
                 perturbations = self.sample_perturbations(imgs)
                 perturbed_imgs = self.clamp_imgs(imgs + perturbations)
+                perturbed_imgs_batch[:, i, :, :] = perturbed_imgs
                 logits = self.algorithm.predict(perturbed_imgs)
                 loss_sum += F.cross_entropy(logits, labels, reduction='sum').item()
                 preds = logits.argmax(dim=1, keepdim=True)
 
                 # unreduced predictions
                 pert_preds = preds.eq(labels.view_as(preds))
+                perturbation_preds_batch[:,i] = pert_preds.squeeze()
 
                 # list of predictions for each data point
                 batch_correct_ls.append(pert_preds)
@@ -281,14 +290,27 @@ class Per_Datum(Evaluator):
 
             # number of correct predictions for each data point
             batch_correct = torch.sum(torch.hstack(batch_correct_ls), dim=1)
+            pathological_images_1 = batch_correct >= 95
+            
             # print('batch_correct: ', batch_correct)
             correct_per_datum.append(batch_correct)
 
 
             # Calculate accuracy for clean data
             logits = self.algorithm.predict(imgs)
-            preds = logits.argmax(dim=1, keepdim=True)
+            preds = logits.argmax(dim=1, keepdim=True).squeeze()
             clean_preds = preds.eq(labels.view_as(preds))
+
+            # Compute pathological Images
+            pathological_images_idx = pathological_images_1 & ~clean_preds
+            temp_path_images = imgs[pathological_images_idx]
+            temp_perturbation_preds_batch = perturbation_preds_batch[pathological_images_idx,:]
+            temp_perturbed_imgs_batch = perturbed_imgs_batch[pathological_images_idx,:,:,:,:]
+            if temp_path_images.shape[0] > 0:
+                path_images.append(temp_path_images)
+                perturbation_preds_split.append(temp_perturbation_preds_batch)
+                perturbed_imgs_split.append(temp_perturbed_imgs_batch)
+
             # print('clean_preds: ', clean_preds)
             total_clean_accuracy_per_datum = torch.cat((total_clean_accuracy_per_datum, clean_preds))
 
@@ -305,5 +327,7 @@ class Per_Datum(Evaluator):
         # Create final results tensor
         results = torch.stack([accuracy_per_datum, clean_accuracy_per_datum], dim=1)
 
+        # Copy parts of analysis_per_datum.py here.
+
         self.algorithm.train()
-        return results
+        return results, path_images, perturbation_preds_split, perturbed_imgs_split

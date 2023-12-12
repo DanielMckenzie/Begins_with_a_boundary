@@ -35,7 +35,7 @@ def main(args, hparams, test_hparams):
         batch_size=hparams['batch_size'],
         num_workers=dataset.N_WORKERS,
         pin_memory=False,
-        shuffle=True)
+        shuffle=False)
     validation_loader = DataLoader(
         dataset=dataset.splits['val'],
         batch_size=hparams['batch_size'],
@@ -75,23 +75,25 @@ def main(args, hparams, test_hparams):
             # output_dir=args.output_dir,
             test_hparams=test_hparams)
 
-    val_res = evaluator.calculate(validation_loader)
-    print('val_res: ', val_res)
-    test_res = evaluator.calculate(test_loader)
-    print('test_res: ', test_res)
-    train_res = evaluator.calculate(train_loader)
-    print('train_res: ', train_res)
+    if args.split == 'val':
+        results, path_images, perturbation_preds, perturbed_imgs = evaluator.calculate(validation_loader)
+    elif args.split == 'train':
+        results, path_images, perturbation_preds, perturbed_imgs = evaluator.calculate(train_loader)
+    else:
+        results, path_images, perturbation_preds, perturbed_imgs = evaluator.calculate(test_loader)
 
-    # save results as numpy arrays stored in a dictionary
-    results = {
-        'train': train_res.cpu().numpy(),
-        'val': val_res.cpu().numpy(),
-        'test': test_res.cpu().numpy(),
-    }
+    data = {'results': results,
+            'path_images': path_images,
+            'perturbation_preds': perturbation_preds,
+            'perturbed_imgs': perturbed_imgs}
 
     # save results as a pickle file
     with open(os.path.join(args.output_dir, 'Per_Datum_results.pkl'), 'wb') as f:
-        pickle.dump(results, f)
+        pickle.dump(data, f)
+
+    # with open(os.path.join(args.output_dir, 'Pathological_images.pkl'), 'wb') as f:
+    #     pickle.dump(path_images, f)
+        
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Adversarial robustness')
@@ -109,6 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('--cvar_sgd_beta', type=float, default=None, help='CVaR-SGD beta')
     parser.add_argument('--epsilon', type=float, default=None, help='Epsilon for PGD attack')
     parser.add_argument('--cvar_sgd_t_step_size', type=float, default=None, help='CVaR-SGD t step size')
+    parser.add_argument('--split', type=str, default='test')
     args = parser.parse_args()
 
     #os.makedirs(os.path.join(args.output_dir), exist_ok=True)

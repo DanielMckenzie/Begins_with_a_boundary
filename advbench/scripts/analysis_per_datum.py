@@ -23,7 +23,12 @@ def plot_distribution(args):
     # correct = data[data[:, 1] == 1]
 
     incorrect = data[data[:, 1] == 0]
+    num_incorrect = incorrect.shape[0]
+    print(num_incorrect)
     save_fig_name = os.path.join('advbench/figs/', args.model_name+'_'+args.split+'.pdf')
+    pathological_images = incorrect[incorrect[:,0] > 94]
+    num_pathological_images = pathological_images.shape[0]
+    print(num_pathological_images)
 
     # Plotting
     plt.figure(figsize=(12, 6))
